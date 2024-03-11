@@ -1,0 +1,45 @@
+### POST /account/register
+POST {{base}}/account/register
+Content-Type: application/x-www-form-urlencoded
+
+email = t@openhole.top &
+password = openhole.top &
+tid = 1001
+
+### POST /account/login
+POST {{base}}/account/login
+Content-Type: application/x-www-form-urlencoded
+
+email = t@openhole.top &
+password = openhole.top
+
+### GET /account/tags
+GET {{base}}/account/tags?keyword=123
+
+### POST /auth/topic
+POST {{base}}/auth/topic
+Content-Type: application/x-www-form-urlencoded
+Authorization: {{auth}}
+
+content = Hello World
+
+### GET /topic
+GET {{base}}/topic?limit=10&offset=0
+
+### POST /auth/star
+POST {{base}}/auth/star
+Content-Type: application/x-www-form-urlencoded
+Authorization: {{auth}}
+
+topic_id = 3
+
+### POST /auth/unstar
+POST {{base}}/auth/unstar
+Content-Type: application/x-www-form-urlencoded
+Authorization: {{auth}}
+
+topic_id = 2
+
+### GET /auth/star/me
+GET {{base}}/auth/star/me?limit=10&offset=0
+Authorization: {{auth}}
