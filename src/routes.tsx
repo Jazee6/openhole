@@ -3,11 +3,12 @@ import Index from "./pages";
 import {NotFound} from "@/components/others.tsx";
 import Account from "@/pages/account.tsx";
 import Detail from "@/pages/detail.tsx";
+import {getComments, getTopicListReq} from "@/api";
 
 export const router = createBrowserRouter([
     {
         path: "/",
-        element: <Index/>,
+        element: <Index/>
     },
     {
         path: "/account",
@@ -16,7 +17,10 @@ export const router = createBrowserRouter([
     {
         path: "/topic/:id",
         element: <Detail/>,
-        //loader useloaderdata
+        loader: async ({params}) => {
+            return await getComments({topic_id: parseInt(params.id as string), limit: 10, offset: 0})
+        },
+        errorElement: <NotFound/>
     },
     {
         path: "*",

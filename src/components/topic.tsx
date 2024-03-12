@@ -4,7 +4,6 @@ import dayjs from "dayjs";
 import {IButton, StarFillIcon, StarIcon, VerifiedIcon} from "./icons.tsx";
 import {createTopicReq, starReq, unStarReq} from "@/api";
 import {useGlobalStore, useTopicListStore} from "@/store";
-import toast from "react-hot-toast";
 import {
     Drawer,
     DrawerContent,
@@ -47,15 +46,16 @@ export function TopicCard({id, tag, created_at, content, verified, starred, star
     function handleStar(e: MouseEvent) {
         e.preventDefault()
 
+        const req = {
+            topic_id: id,
+        }
         if (starred === null) {
-            starReq(id).then(m => {
+            starReq(req).then(() => {
                 setStar(id, star)
-                toast.success(m.message!)
             })
         } else {
-            unStarReq(id).then(m => {
+            unStarReq(req).then(() => {
                 setUnStar(id, star)
-                toast.success(m.message!)
             })
         }
     }
@@ -76,7 +76,7 @@ export function TopicCard({id, tag, created_at, content, verified, starred, star
                             <IButton onClick={handleStar}><StarIcon className={"fill-warning"}/></IButton>}
                     </div>
                 </div>
-                <div className={"line-clamp-5"}>
+                <div className="break-words line-clamp-5">
                     {content}
                 </div>
             </div>
@@ -132,10 +132,9 @@ function CreateTopicForm({setTopicDrawer}: { setTopicDrawer: (b: boolean) => voi
     function onSubmit(values: z.infer<typeof createTopicSchema>) {
         setButtonDisabled(true)
 
-        createTopicReq(values).then(m => {
+        createTopicReq(values).then(() => {
             setTopicDrawer(false)
             setReload()
-            toast.success(m.message!)
         }).finally(() => {
             setButtonDisabled(false)
         })
@@ -148,9 +147,9 @@ function CreateTopicForm({setTopicDrawer}: { setTopicDrawer: (b: boolean) => voi
                     control={form.control}
                     name="content"
                     render={({field}) => (
-                        <FormItem className="px-4">
+                        <FormItem className="px-4 h-full">
                             <FormControl>
-                                <Textarea placeholder="说点什么..." {...field}/>
+                                <Textarea className="h-full" placeholder="说点什么..." {...field}/>
                             </FormControl>
                             <FormMessage/>
                         </FormItem>

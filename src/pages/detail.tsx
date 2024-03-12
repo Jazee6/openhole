@@ -1,12 +1,32 @@
-import {useLocation} from "react-router-dom";
+import {useLoaderData} from "react-router-dom";
+
+interface CommentData {
+    id: number,
+    uid: number,
+    root_id: number | null,
+    to_id: number | null,
+    content: string,
+    created_at: string,
+    verified: number,
+    tag: string,
+    replies: CommentData[],
+}
 
 function Detail() {
-   const location = useLocation()
-    console.log(location.pathname)
+    const {data} = useLoaderData() as { data: CommentData[] }
 
     return (
         <div>
-            123
+            {data.map(comment => (
+                <div key={comment.id}>
+                    <p>{comment.content}</p>
+                    {comment.replies.map(reply => (
+                        <div key={reply.id}>
+                            <p>{reply.content}</p>
+                        </div>
+                    ))}
+                </div>
+            ))}
         </div>
     );
 }

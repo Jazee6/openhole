@@ -14,7 +14,7 @@ dayjs.extend(timezone)
 dayjs.tz.setDefault("Europe/London")
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-    <React.StrictMode>
-        <Layout/>
-    </React.StrictMode>
+    // <React.StrictMode>
+    <Layout/>
+    // </React.StrictMode>
 )

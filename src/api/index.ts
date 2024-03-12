@@ -1,64 +1,54 @@
-import {getFetch, postFetch} from "./helper.ts";
+import {getFetch, postFetch, postFetchWithRecaptcha} from "./helper.ts";
 import {z} from "zod";
-import {createTopicSchema} from "@/server/utils/validator.ts";
+import {
+    createCommentSchema,
+    createTopicSchema,
+    getCommentListSchema, getTagsSchema, getTopicListSchema,
+    loginSchema, myStarredTopicSchema,
+    registerSchema, starTopicSchema
+} from "@/server/utils/validator.ts";
 
-interface LoginReq {
-    email: string
-    password: string
-}
-
-export function loginReq({email, password}: LoginReq) {
-    return postFetch("/account/login", new URLSearchParams({
+export function loginReq({email, password}: z.infer<typeof loginSchema>) {
+    return postFetchWithRecaptcha("/account/login", new URLSearchParams({
         email,
         password,
     }))
 }
 
-interface RegisterReq {
-    email: string
-    password: string
-    tid: number
-}
-
-export function registerReq({email, password, tid}: RegisterReq) {
-    return postFetch("/account/register", new URLSearchParams({
+export function registerReq({email, password, tid}: z.infer<typeof registerSchema>) {
+    return postFetchWithRecaptcha("/account/register", new URLSearchParams({
         email,
         password,
         tid: tid.toString(),
     }))
 }
 
-interface GetTopicListReq {
-    limit: number
-    offset: number
-}
-
-export function getTopicListReq({limit, offset}: GetTopicListReq) {
+export function getTopicListReq({limit, offset}: z.infer<typeof getTopicListSchema>) {
     return getFetch('/topic', new URLSearchParams({
         limit: limit.toString(),
         offset: offset.toString(),
     }))
 }
 
-export function getTagsReq(keyword: string) {
+export function getTagsReq({keyword}: z.infer<typeof getTagsSchema>) {
     return getFetch('/account/tags', new URLSearchParams({
         keyword,
     }))
 }
 
-export function starReq(topic_id: number) {
+export function starReq({topic_id}: z.infer<typeof starTopicSchema>) {
     return postFetch('/auth/star', new URLSearchParams({
         topic_id: topic_id.toString(),
     }))
 }
 
-export function unStarReq(topic_id: number) {
+export function unStarReq({topic_id}: z.infer<typeof starTopicSchema>) {
     return postFetch('/auth/unstar', new URLSearchParams({
         topic_id: topic_id.toString(),
     }))
 }
 
-export function getStarListReq({limit, offset}: GetTopicListReq) {
+export function getStarListReq({limit, offset}: z.infer<typeof myStarredTopicSchema>) {
     return getFetch('/auth/star/me', new URLSearchParams({
         limit: limit.toString(),
         offset: offset.toString(),
@@ -67,6 +57,23 @@ export function getStarListReq({limit, offset}: GetTopicListReq) {
 
 export function createTopicReq({content}: z.infer<typeof createTopicSchema>) {
     return postFetch('/auth/topic', new URLSearchParams({
+        content,
+    }))
+}
+
+export function getComments({topic_id, limit, offset}: z.infer<typeof getCommentListSchema>) {
+    return getFetch('/auth/comment', new URLSearchParams({
+        topic_id: topic_id.toString(),
+        limit: limit.toString(),
+        offset: offset.toString(),
+    }))
+}
+
+export function createComment({topic_id, root_id, to_id, content}: z.infer<typeof createCommentSchema>) {
+    return postFetch('/auth/comment', new URLSearchParams({
+        topic_id: topic_id.toString(),
+        root_id: root_id?.toString() ?? "",
+        to_id: to_id?.toString() ?? "",
         content,
     }))
 }

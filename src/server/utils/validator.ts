@@ -17,7 +17,7 @@ export const loginSchema = z.object({
 })
 
 export const createTopicSchema = z.object({
-    content: z.string().trim().min(1).max(1024),
+    content: z.string().trim().min(1).max(4096),
 })
 
 export const getTagsSchema = z.object({
@@ -26,8 +26,24 @@ export const getTagsSchema = z.object({
 
 export const getTopicListSchema = z.object(basicPagination)
 
+export const getTopicSchema = z.object({
+    topic_id: z.coerce.number().int(),
+})
+
 export const starTopicSchema = z.object({
     topic_id: z.coerce.number().int(),
 })
 
 export const myStarredTopicSchema = z.object(basicPagination)
+
+export const getCommentListSchema = z.object({
+    topic_id: z.coerce.number().int(),
+    ...basicPagination,
+})
+
+export const createCommentSchema = z.object({
+    topic_id: z.coerce.number().int(),
+    root_id: z.coerce.number().int().optional(),
+    to_id: z.coerce.number().int().optional(),
+    content: z.string().trim().min(1).max(4096),
+})

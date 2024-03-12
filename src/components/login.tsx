@@ -32,7 +32,6 @@ import {useGlobalStore} from "@/store";
 import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs.tsx";
 import {getTagsReq, loginReq, registerReq} from "@/api";
 import {useState} from "react";
-import toast from "react-hot-toast";
 import {cn} from "@/utils/utils.ts";
 import {Check, ChevronsUpDown, Loader2} from "lucide-react";
 import {useDebounce} from "react-use";
@@ -84,8 +83,7 @@ function LoginForm({setLoginModal, setIsLogin}: FormProps) {
     function onSubmit(values: z.infer<typeof loginSchema>) {
         setButtonDisabled(true)
 
-        loginReq(values).then(m => {
-            toast.success(m.message!)
+        loginReq(values).then(() => {
             setLoginModal(false)
             setIsLogin(true)
         }).finally(() => {
@@ -117,6 +115,15 @@ function LoginForm({setLoginModal, setIsLogin}: FormProps) {
                                 <Input type="password" placeholder="密码" {...field} />
                             </FormControl>
                             <FormMessage/>
+                            <FormDescription className="ml-1">
+                                <span className="text-xs">
+                                    This site is protected by reCAPTCHA and the Google
+                                    <a className="text-primary" target="_blank"
+                                       href="https://policies.google.com/privacy"> Privacy Policy</a> and
+                                    <a className="text-primary" target="_blank"
+                                       href="https://policies.google.com/terms"> Terms of Service</a> apply.
+                                </span>
+                            </FormDescription>
                         </FormItem>
                     )}
                 />
@@ -151,17 +158,13 @@ function RegisterForm({setLoginModal, setIsLogin}: FormProps) {
     useDebounce(() => {
         if (tagKey.trim().length < 1) return
         setButtonDisabled(true)
-        getTagsReq(tagKey).then(r => setTags(r.data as Tag[])).finally(() => setButtonDisabled(false))
+        getTagsReq({keyword: tagKey}).then(r => setTags(r.data as Tag[])).finally(() => setButtonDisabled(false))
     }, 1000, [tagKey])
 
     function onSubmit(values: z.infer<typeof registerSchema>) {
         setButtonDisabled(true)
 
-        toast.promise(registerReq(values), {
-            loading: "注册中...",
-            success: m => m.message!,
-            error: e => (e as Error).message,
-        }).then(() => {
+        registerReq(values).then(() => {
             setLoginModal(false)
             setIsLogin(true)
         }).finally(() => {
@@ -251,10 +254,10 @@ function RegisterForm({setLoginModal, setIsLogin}: FormProps) {
                                     </Command>
                                 </PopoverContent>
                             </Popover>
+                            <FormMessage/>
                             <FormDescription className="ml-1">
                                 注册成功后可以对您的标签进行验证
                             </FormDescription>
-                            <FormMessage/>
                         </FormItem>
                     )}
                 />

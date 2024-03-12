@@ -43,3 +43,17 @@ topic_id = 2
 ### GET /auth/star/me
 GET {{base}}/auth/star/me?limit=10&offset=0
 Authorization: {{auth}}
+
+### GET /auth/comment
+GET {{base}}/auth/comment?limit=10&offset=0&topic_id=1
+Authorization: {{auth}}
+
+### POST /auth/comment
+POST {{base}}/auth/comment
+Content-Type: application/x-www-form-urlencoded
+Authorization:{{auth}}
+
+topic_id = 1 &
+content = Hello World
+#& root_id = 1
+#& to_id = 1
