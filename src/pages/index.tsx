@@ -1,12 +1,13 @@
-import {CreateTopicDrawer, TopicCard, TopicList} from "../components/topic.tsx";
+import {CreateTopicDrawer, TopicList} from "../components/topic.tsx";
 import {useEffect, useState} from "react";
 import {getTopicListReq} from "@/api";
 import {useGlobalStore, useTopicListStore} from "@/store";
-import {randomNum} from "../utils/tools.ts";
-import {Skeleton} from "@/components/ui/skeleton.tsx";
 import {EditIcon} from "lucide-react";
 import {Button} from "@/components/ui/button.tsx";
-import {LoadingIcon} from "@/components/icons.tsx";
+import {TopicCardType} from "@/utils/types.ts";
+import {LoadMore} from "@/components/others.tsx";
+import {Skeleton} from "@/components/ui/skeleton.tsx";
+import {randomNum} from "@/utils/tools.ts";
 
 function Index() {
     const isLogin = useGlobalStore((state) => state.isLogin)
@@ -18,7 +19,7 @@ function Index() {
 
     useEffect(() => {
         getTopicListReq({limit: 15, offset: 0}).then(res => {
-            setTopicList(res.data as TopicCard[])
+            setTopicList(res.data as TopicCardType[])
             setInit(true)
         })
     }, [setTopicList, isLogin, reload]);
@@ -29,7 +30,7 @@ function Index() {
             const observer = new IntersectionObserver((entries) => {
                 if (entries[0].isIntersecting) {
                     getTopicListReq({limit: 15, offset: topicList.length}).then(res => {
-                        const data = res.data as TopicCard[]
+                        const data = res.data as TopicCardType[]
                         setTopicList([...topicList, ...data])
                         if (data.length < 15) {
                             observer.unobserve(loadMore)
@@ -56,15 +57,13 @@ function Index() {
                 <ul className="pt-16">
                     {
                         Array.from({length: randomNum(1, 10)}).map((_, i) => (
-                            <Skeleton key={i} className="w-full h-20 mt-2 rounded-md"/>
+                            <Skeleton key={i} className="w-full h-20 mt-2 rounded-md bg-card"/>
                         ))
                     }
                 </ul>
             }
 
-            <div id="load-more" className="h-16 w-full flex justify-center">
-                <LoadingIcon className="h-full animate-spin"/>
-            </div>
+            <LoadMore/>
 
             {isLogin &&
                 <div className="flex justify-end sticky bottom-4 right-4 sm:right-6 lg:right-8 mt-auto">

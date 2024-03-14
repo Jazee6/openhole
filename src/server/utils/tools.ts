@@ -3,6 +3,8 @@ import {Hono} from "hono";
 import {cors} from 'hono/cors'
 import {verify} from "hono/jwt";
 import {createMiddleware} from "hono/factory";
+import {csrf} from "hono/csrf";
+import {secureHeaders} from 'hono/secure-headers'
 
 export function getUUID() {
     return v4().split('-').join('')
@@ -24,9 +26,16 @@ export function createHonoWithCors() {
     return new Hono<{ Bindings: Bindings }>().use((c, next) => {
         const corsMiddleware = cors({
             origin: c.env.SITE_URL,
+            exposeHeaders: ['Authorization']
         })
         return corsMiddleware(c, next)
     })
+        // .use((c, next) => {
+        //     const csrfMiddleware = csrf({
+        //         origin: c.env.SITE_URL,
+        //     })
+        //     return csrfMiddleware(c, next)
+        // }).use(secureHeaders())
 }
 
 export async function getPayload(token: string, secret: string) {

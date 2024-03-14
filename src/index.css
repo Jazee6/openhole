@@ -73,7 +73,7 @@
 }
 
 html, body, #root, main {
-    @apply min-h-screen
+    @apply min-h-screen bg-secondary
 }
 
 .grecaptcha-badge {

@@ -51,9 +51,12 @@ Authorization: {{auth}}
 ### POST /auth/comment
 POST {{base}}/auth/comment
 Content-Type: application/x-www-form-urlencoded
-Authorization:{{auth}}
+Authorization:{{auth1}}
 
 topic_id = 1 &
-content = Hello World
-#& root_id = 1
-#& to_id = 1
+content = Hello World你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界你好世界
+#& root_id = 2
+#& to_id = 2
+
+### GET /topic/1
+GET {{base}}/topic/1

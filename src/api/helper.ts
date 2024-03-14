@@ -70,8 +70,11 @@ export async function postFetchWithRecaptcha(url: string, body: URLSearchParams)
     });
 }
 
-export function getFetch(url: string, queryParams: URLSearchParams) {
-    return basicFetch(url + "?" + queryParams.toString());
+export function getFetch(url: string, queryParams?: URLSearchParams) {
+    if (queryParams) {
+        url += "?" + queryParams.toString()
+    }
+    return basicFetch(url);
 }
 
 export function getRecaptchaToken() {

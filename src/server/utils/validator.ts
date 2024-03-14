@@ -2,13 +2,13 @@ import {z} from 'zod';
 
 const basicPagination = {
     limit: z.coerce.number().min(1).max(25),
-    offset: z.coerce.number().int().min(0),
+    offset: z.coerce.number().min(0),
 }
 
 export const registerSchema = z.object({
     email: z.string().trim().email(),
     password: z.string().trim().min(8).max(64),
-    tid: z.coerce.number().int(),
+    tid: z.coerce.number().gt(0),
 })
 
 export const loginSchema = z.object({
@@ -27,23 +27,23 @@ export const getTagsSchema = z.object({
 export const getTopicListSchema = z.object(basicPagination)
 
 export const getTopicSchema = z.object({
-    topic_id: z.coerce.number().int(),
+    id: z.coerce.number().gt(0),
 })
 
 export const starTopicSchema = z.object({
-    topic_id: z.coerce.number().int(),
+    topic_id: z.coerce.number().gt(0),
 })
 
 export const myStarredTopicSchema = z.object(basicPagination)
 
 export const getCommentListSchema = z.object({
-    topic_id: z.coerce.number().int(),
+    topic_id: z.coerce.number().gt(0),
     ...basicPagination,
 })
 
 export const createCommentSchema = z.object({
-    topic_id: z.coerce.number().int(),
-    root_id: z.coerce.number().int().optional(),
-    to_id: z.coerce.number().int().optional(),
+    topic_id: z.coerce.number().gt(0),
+    root_id: z.coerce.number().gt(0).optional(),
+    to_id: z.coerce.number().gt(0).optional(),
     content: z.string().trim().min(1).max(4096),
 })

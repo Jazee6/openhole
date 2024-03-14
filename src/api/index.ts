@@ -3,7 +3,7 @@ import {z} from "zod";
 import {
     createCommentSchema,
     createTopicSchema,
-    getCommentListSchema, getTagsSchema, getTopicListSchema,
+    getCommentListSchema, getTagsSchema, getTopicListSchema, getTopicSchema,
     loginSchema, myStarredTopicSchema,
     registerSchema, starTopicSchema
 } from "@/server/utils/validator.ts";
@@ -56,7 +56,7 @@ export function getStarListReq({limit, offset}: z.infer<typeof myStarredTopicSch
 }
 
 export function createTopicReq({content}: z.infer<typeof createTopicSchema>) {
-    return postFetch('/auth/topic', new URLSearchParams({
+    return postFetchWithRecaptcha('/auth/topic', new URLSearchParams({
         content,
     }))
 }
@@ -70,10 +70,14 @@ export function getComments({topic_id, limit, offset}: z.infer<typeof getComment
 }
 
 export function createComment({topic_id, root_id, to_id, content}: z.infer<typeof createCommentSchema>) {
-    return postFetch('/auth/comment', new URLSearchParams({
+    return postFetchWithRecaptcha('/auth/comment', new URLSearchParams({
         topic_id: topic_id.toString(),
         root_id: root_id?.toString() ?? "",
         to_id: to_id?.toString() ?? "",
         content,
     }))
+}
+
+export function getTopic({id}: z.infer<typeof getTopicSchema>) {
+    return getFetch(`/topic/${id}`)
 }

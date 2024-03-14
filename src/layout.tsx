@@ -1,10 +1,9 @@
-import Header from "./components/header.tsx";
-import Footer from "./components/footer.tsx";
 import {router} from "./routes.tsx";
 import {RouterProvider} from "react-router-dom";
 import {LoginModal} from "./components/login.tsx";
 import {Toaster} from "react-hot-toast";
 import {useEffect} from "react";
+import {Header, Footer} from "@/components/others.tsx";
 
 function Layout() {
     useEffect(() => {

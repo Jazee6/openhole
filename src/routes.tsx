@@ -3,12 +3,28 @@ import Index from "./pages";
 import {NotFound} from "@/components/others.tsx";
 import Account from "@/pages/account.tsx";
 import Detail from "@/pages/detail.tsx";
-import {getComments, getTopicListReq} from "@/api";
+import {useGlobalStore} from "@/store";
 
 export const router = createBrowserRouter([
     {
         path: "/",
-        element: <Index/>
+        element: <Index/>,
+    },
+    {
+        path: "/login",
+        element: <Index/>,
+        loader: async () => {
+            useGlobalStore.getState().setLoginModal(true)
+            return null
+        }
+    },
+    {
+        path: "/register",
+        element: <Index/>,
+        loader: async () => {
+            useGlobalStore.getState().setLoginModal(false)
+            return null
+        }
     },
     {
         path: "/account",
@@ -18,9 +34,11 @@ export const router = createBrowserRouter([
         path: "/topic/:id",
         element: <Detail/>,
         loader: async ({params}) => {
-            return await getComments({topic_id: parseInt(params.id as string), limit: 10, offset: 0})
-        },
-        errorElement: <NotFound/>
+            if (params.id) {
+                return parseInt(params.id)
+            }
+            return null
+        }
     },
     {
         path: "*",

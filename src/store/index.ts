@@ -1,10 +1,10 @@
 import {create} from "zustand";
-import {TopicCard} from "../components/topic.tsx";
 import {isLogin} from "@/utils/tools.ts";
+import {TopicCardType} from "@/utils/types.ts";
 
 interface TopicListState {
-    topicList: TopicCard[];
-    setTopicList: (topicList: TopicCard[]) => void;
+    topicList: TopicCardType[];
+    setTopicList: (topicList: TopicCardType[]) => void;
     setTopicStar: (topicId: number, star: number) => void;
     setTopicUnStar: (topicId: number, star: number) => void;
 }

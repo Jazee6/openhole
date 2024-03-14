@@ -1,4 +1,4 @@
-import {WithClassName} from "../utils/types.ts";
+import {CommentData, TopicCardType, WithClassName} from "../utils/types.ts";
 import clsx from "clsx";
 import dayjs from "dayjs";
 import {IButton, StarFillIcon, StarIcon, VerifiedIcon} from "./icons.tsx";
@@ -13,7 +13,6 @@ import {
     DrawerTitle,
 } from "@/components/ui/drawer"
 import {Button} from "@/components/ui/button.tsx";
-import {Link} from "react-router-dom";
 import {useState} from "react";
 import {useForm} from "react-hook-form";
 import {z} from "zod";
@@ -23,64 +22,78 @@ import {Form, FormControl, FormField, FormItem, FormMessage} from "@/components/
 import {Loader2} from "lucide-react";
 import {cn} from "@/utils/utils.ts";
 import {Textarea} from "@/components/ui/textarea.tsx";
+import {useNavigate} from "react-router-dom";
+import {getAnonymousSub, handleLink} from "@/utils/tools.ts";
 
-
-export interface TopicCard {
-    id: number,
-    tag: string,
-    created_at: string,
-    content: string,
-    verified: number,
-    starred: number | null,
-    star: number,
+interface TopicCardProps extends WithClassName, TopicCardType {
+    isDetail?: boolean,
+    dispatch?: (action: { type: string, payload: { data: unknown } }) => void
 }
 
-export interface TopicCardProps extends WithClassName, TopicCard {
-
-}
-
-export function TopicCard({id, tag, created_at, content, verified, starred, star, className}: TopicCardProps) {
+export function TopicCard({
+                              id,
+                              tag,
+                              created_at,
+                              content,
+                              verified,
+                              starred,
+                              star,
+                              className,
+                              isDetail,
+                              dispatch
+                          }: TopicCardProps) {
     const setStar = useTopicListStore((state) => state.setTopicStar)
     const setUnStar = useTopicListStore((state) => state.setTopicUnStar)
+    const nav = useNavigate()
 
     function handleStar(e: MouseEvent) {
-        e.preventDefault()
+        e.stopPropagation()
 
         const req = {
             topic_id: id,
         }
         if (starred === null) {
             starReq(req).then(() => {
+                if (isDetail) {
+                    dispatch && dispatch({type: 'setStarOne', payload: {data: id}})
+                    return
+                }
                 setStar(id, star)
             })
         } else {
             unStarReq(req).then(() => {
+                if (isDetail) {
+                    dispatch && dispatch({type: 'setUnStarOne', payload: {data: null}})
+                    return
+                }
                 setUnStar(id, star)
             })
         }
     }
 
+    async function handleDetail() {
+        if (isDetail) return
+        nav(`/topic/${id}`)
+    }
+
     return (
-        <Link to={`/topic/${id}`}>
-            <div
-                className={clsx(className, "flex flex-col p-2 shadow rounded-md hover:cursor-pointer hover:bg-secondary transition-all space-y-1")}>
-                <div className={"relative flex items-baseline"}>
-                    <span className={"font-bold text-primary"}>#{id}</span>
-                    <span className={"text-primary ml-2"}>{tag}</span>
-                    {verified !== 0 && <VerifiedIcon className={"fill-primary w-5 h-5 relative top-1 ml-1"}/>}
-                    <span className={"text-secondary-foreground text-xs ml-1"}>{dayjs.tz(created_at).fromNow()}</span>
-                    <div className={"absolute right-0 top-0"}>
-                        <span className={"text-sm absolute top-2 right-8 text-warning"}>{star}</span>
-                        {starred ? <IButton onClick={handleStar}><StarFillIcon
-                                className="fill-warning"/></IButton> :
-                            <IButton onClick={handleStar}><StarIcon className={"fill-warning"}/></IButton>}
-                    </div>
-                </div>
-                <div className="break-words line-clamp-5">
-                    {content}
+        <div onClick={handleDetail}
+             className={clsx(className, "flex flex-col p-2 bg-card rounded-md hover:cursor-pointer hover:ring-1 ring-primary transition-all space-y-1")}>
+            <div className={"relative flex items-baseline"}>
+                <span className={"font-bold text-primary"}>#{id}</span>
+                <span className={"text-primary ml-2"}>{tag}</span>
+                {verified !== 0 && <VerifiedIcon className={"fill-primary w-5 h-5 relative top-1 ml-1"}/>}
+                <span className={"text-secondary-foreground text-xs ml-1"}>{dayjs.tz(created_at).fromNow()}</span>
+                <div className={"absolute right-0 top-0"}>
+                    <span className={"text-sm absolute top-2 right-8 text-warning"}>{star}</span>
+                    {starred ? <IButton onClick={handleStar}><StarFillIcon
+                            className="fill-warning"/></IButton> :
+                        <IButton onClick={handleStar}><StarIcon className={"fill-warning"}/></IButton>}
                 </div>
             </div>
-        </Link>
+            <div className={isDetail ? "break-words" : "break-words line-clamp-5"}
+                 dangerouslySetInnerHTML={handleLink(content)}/>
+        </div>
     );
 }
 
@@ -167,4 +180,65 @@ function CreateTopicForm({setTopicDrawer}: { setTopicDrawer: (b: boolean) => voi
             </form>
         </Form>
     )
+}
+
+export interface CommentCardProps extends WithClassName, CommentData {
+
+}
+
+function CommentCard({
+                         replies,
+                         className,
+                         ...reply
+                     }: CommentCardProps) {
+
+    return (
+        <div className={clsx(className, "flex flex-col p-2 rounded-md space-y-1 bg-card")}>
+            <div className="flex items-baseline">
+                <span className="text-primary text-sm">{reply.tag}</span>
+                {reply.verified !== 0 &&
+                    <VerifiedIcon className={"fill-primary w-3.5 h-3.5 relative top-0.5 left-0.5"}/>}
+                <span className="text-secondary-foreground text-xs ml-1">{dayjs.tz(reply.created_at).fromNow()}</span>
+                <span className="text-primary text-xs ml-auto">R#{reply.id}</span>
+            </div>
+            <div
+                className="flex items-center hover:bg-secondary hover:cursor-pointer rounded-md transition-all">
+                <span>{reply.uid !== 0 ? getAnonymousSub(reply.uid - 1) : "洞主"}</span>
+                <span className="ml-4 line-clamp-5">{reply.content}</span>
+            </div>
+            {replies.length > 0 && <SubCommentCard replies={replies}/>}
+        </div>
+    )
+}
+
+function SubCommentCard({replies}: { replies: CommentData[] }) {
+
+    return <div className="ml-4">
+        {replies.map(reply => <SubCommentItem key={reply.id} {...reply} />)}
+    </div>
+}
+
+function SubCommentItem(subReply: CommentData) {
+
+    return (
+        <div
+            className="flex items-center text-sm rounded-md hover:bg-secondary hover:cursor-pointer transition-all">
+            <span>{subReply.uid !== 0 ? getAnonymousSub(subReply.uid - 1) : "洞主"}</span>
+            <span
+                className="shrink-0">{subReply.to_uid !== null ? '回复' + getAnonymousSub(subReply.to_uid! - 1) : ""}</span>
+            <span className="ml-4 line-clamp-2">{subReply.content}</span>
+        </div>
+    );
+}
+
+export function CommentList({CommentList, className}: { CommentList: CommentData[], className?: string }) {
+    return (
+        <ol className={className}>
+            {CommentList.map(comment => (
+                <li key={comment.id}>
+                    <CommentCard className="mt-2" {...comment}/>
+                </li>
+            ))}
+        </ol>
+    );
 }
