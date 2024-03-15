@@ -2,9 +2,13 @@
 
 ## 特性
 
-- 完全匿名
+- 基于Cloudflare workers，无服务器快速部署
+- 完全匿名化，讨论无法被追踪
+- 可选附带标签，可选IP屏蔽
 
 ## 部署
+
+待补充
 
 ### 前端
 
@@ -12,10 +16,8 @@
 
 ## 声明
 
-wrangler d1 execute openhole-dev --local --file=./init/create.sql
+本项目仅供学习交流使用，不得用于非法用途，否则后果自负。
 
-wrangler d1 execute openhole-dev --local --file=./init/dev.sql
+## 感谢
 
-wrangler d1 execute openhole-dev --local --file=./init/tags.sql
-
-wrangler d1 execute openhole-dev --local --command="select * from comments"
+- [treehollow](https://github.com/treehollow)

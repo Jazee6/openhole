@@ -1,9 +1,13 @@
-import {CommentList, TopicCard} from "@/components/topic.tsx";
+import {CommentDrawerProps, CommentList, CreateCommentDrawer, TopicCard} from "@/components/topic.tsx";
 import {CommentData, TopicCardType} from "@/utils/types.ts";
 import {useEffect, useReducer, useState} from "react";
 import {getComments, getTopic} from "@/api";
 import {useLoaderData} from "react-router-dom";
 import {Skeleton} from "@/components/ui/skeleton.tsx";
+import {Button} from "@/components/ui/button.tsx";
+import {EditIcon} from "lucide-react";
+import {useGlobalStore} from "@/store";
+import {isLogin} from "@/utils/tools.ts";
 
 const reducer = (state: TopicCardType, action: {
     type: string,
@@ -28,6 +32,11 @@ function Detail() {
     const [topic, dispatch] = useReducer(reducer, {} as TopicCardType);
     const [commentList, setCommentList] = useState<CommentData[]>([])
     const [loading, setLoading] = useState(false)
+    const commentDrawer = useGlobalStore((state) => state.commentDrawer)
+    const setCommentDrawer = useGlobalStore((state) => state.setCommentDrawer)
+    const reload = useGlobalStore((state) => state.reload)
+    const commentDrawerData = useGlobalStore((state) => state.commentDrawerData)
+    const setCommentDrawerData = useGlobalStore((state) => state.setCommentDrawerData)
 
     useEffect(() => {
         if (!id) return
@@ -39,10 +48,22 @@ function Detail() {
             setLoading(false)
             setCommentList(res.data as CommentData[])
         })
-    }, [id]);
+    }, [id, reload]);
+
+    function handleNewComment() {
+        setCommentDrawer(true)
+        setCommentDrawerData({})
+    }
+
+    const commentDrawerProps: CommentDrawerProps = {
+        CommentDrawer: commentDrawer,
+        topicID: id ? id : topic.id,
+        setCommentDrawer,
+        ...commentDrawerData
+    }
 
     return (
-        <div className="pt-16 container-global">
+        <div className="pt-16 container-global flex flex-col min-h-screen">
             {topic.id ?
                 <TopicCard className="mt-2" {...topic} isDetail dispatch={dispatch}/> :
                 <Skeleton className="w-full h-20 mt-2 rounded-md bg-card"/>
@@ -57,6 +78,17 @@ function Detail() {
                 (commentList.length ? <CommentList CommentList={commentList}/> :
                     <div className="pt-4 text-center">No comments yet</div>)
             }
+
+            {isLogin() &&
+                <div className="flex justify-end sticky bottom-4 right-4 sm:right-6 lg:right-8 mt-auto">
+                    <Button onClick={handleNewComment}
+                            className="bg-primary hover:opacity-70 rounded-full h-16 w-16 transition-all shadow-xl">
+                        <EditIcon/>
+                    </Button>
+                </div>
+            }
+
+            <CreateCommentDrawer {...commentDrawerProps}/>
         </div>
     );
 }

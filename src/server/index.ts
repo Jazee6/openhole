@@ -1,9 +1,7 @@
-// @ts-ignore
-
 import {Hono} from 'hono'
 import {
     Bindings,
-    createHonoWithCors,
+    createHono,
     getPayload,
     getUUID,
     Payload,
@@ -25,7 +23,7 @@ import {
 } from "./utils/validator.ts";
 import {showRoutes} from 'hono/dev'
 
-const account = createHonoWithCors()
+const account = createHono()
 
 account.post('/register', recaptchaMiddleware, zValidator('form', registerSchema), async c => {
     const {email, password, tid} = c.req.valid('form')
@@ -39,7 +37,11 @@ account.post('/register', recaptchaMiddleware, zValidator('form', registerSchema
     const id = getUUID()
     const result = await db.prepare('INSERT INTO accounts (id, tid, email, password) VALUES (?, ?, ?, ?)').bind(id, tid, email, sha1(password).toString()).run()
     if (result.success) {
-        const payload: Payload = {id}
+        const payload: Payload = {
+            id,
+            iat: Math.floor(Date.now() / 1000),
+            exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30 * 3 // 3 months
+        }
         c.header('Authorization', `Bearer ${await sign(payload, c.env.JWT_SECRET)}`)
         return c.json({message: 'Success to register'})
     } else {
@@ -56,7 +58,11 @@ account.post('/login', recaptchaMiddleware, zValidator('form', loginSchema), asy
         return c.text('Invalid email or password', 400)
     }
 
-    const payload: Payload = {id: account.id as string}
+    const payload: Payload = {
+        id: account.id as string,
+        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30 * 3 // 3 months
+    }
     c.header('Authorization', `Bearer ${await sign(payload, c.env.JWT_SECRET)}`)
     return c.json({message: 'Success to login'})
 })
@@ -69,7 +75,7 @@ account.get('/tags', zValidator('query', getTagsSchema), async c => {
     return c.json({data: results})
 })
 
-const auth = createHonoWithCors()
+const auth = createHono()
 auth.use((c, next) => {
     const jwtMiddleware = jwt({
         secret: c.env.JWT_SECRET,
@@ -159,6 +165,9 @@ auth.post('/comment', recaptchaMiddleware, zValidator('form', createCommentSchem
             }
             if (r.uid === uid) {
                 res = await db.prepare('INSERT INTO comments (uid, topic_id, root_id, content) VALUES (?, ?, ?, ?)').bind(uid, topic_id, root_id, content).run()
+                if (res.success) {
+                    return c.json({message: 'Success to create comment'})
+                }
             }
             res = await db.prepare('INSERT INTO comments (uid, topic_id, root_id, to_id, to_uid, content) VALUES (?, ?, ?, ?, ?, ?)').bind(uid, topic_id, root_id, to_id, r.uid, content).run()
         } else {
@@ -195,7 +204,7 @@ auth.get('/comment', zValidator('query', getCommentListSchema), async c => {
     }
 
     for (const comment of results) {
-        const {results} = await db.prepare('SELECT a.id, a.uid, a.to_uid, a.content, a.created_at, b.verified, c.name tag FROM comments a left join accounts b on a.uid=b.id left join tags c on b.tid=c.id where a.root_id=? order by a.created_at desc limit 3').bind(comment.id).all()
+        const {results} = await db.prepare('SELECT a.id, a.uid, a.root_id, a.to_uid, a.content, a.created_at, b.verified, c.name tag FROM comments a left join accounts b on a.uid=b.id left join tags c on b.tid=c.id where a.root_id=? order by a.created_at desc limit 3').bind(comment.id).all()
         for (const comment of results) {
             const uid = comment.uid as string
             if (!m.has(uid)) {
@@ -216,7 +225,7 @@ auth.get('/comment', zValidator('query', getCommentListSchema), async c => {
     return c.json({data: results})
 })
 
-const topic = createHonoWithCors()
+const topic = createHono()
 topic.get('/', zValidator('query', getTopicListSchema), async c => {
     const {limit, offset} = c.req.valid('query')
     const db = c.env.D1
@@ -224,7 +233,12 @@ topic.get('/', zValidator('query', getTopicListSchema), async c => {
     const token = c.req.header().authorization?.substring(7)
     let uid: string
     if (token !== undefined) {
-        const payload: Payload = await getPayload(token, c.env.JWT_SECRET)
+        let payload: Payload
+        try {
+            payload = await getPayload(token, c.env.JWT_SECRET)
+        } catch (e) {
+            return c.text(e as string, 401)
+        }
         uid = payload.id
 
         const {results} = await db.prepare('SELECT a.id, a.content, a.star, a.created_at, b.verified, c.name tag, d.topic_id starred FROM topics a left join accounts b on a.uid=b.id left join tags c on b.tid=c.id left join stars d on a.id=d.topic_id and d.uid=? order by a.created_at desc limit ? offset ?').bind(uid, limit, offset).all()
@@ -242,7 +256,12 @@ topic.get('/:id', zValidator('param', getTopicSchema), async c => {
     const token = c.req.header().authorization?.substring(7)
     let uid: string
     if (token !== undefined) {
-        const payload: Payload = await getPayload(token, c.env.JWT_SECRET)
+        let payload: Payload
+        try {
+            payload = await getPayload(token, c.env.JWT_SECRET)
+        } catch (e) {
+            return c.text(e as string, 401)
+        }
         uid = payload.id
 
         const res = await db.prepare('SELECT a.id, a.content, a.star, a.created_at, b.verified, c.name tag, d.topic_id starred FROM topics a left join accounts b on a.uid=b.id left join tags c on b.tid=c.id left join stars d on a.id=d.topic_id and d.uid=? where a.id=?').bind(uid, id).first()
@@ -261,8 +280,10 @@ topic.get('/:id', zValidator('param', getTopicSchema), async c => {
 
 const app = new Hono<{ Bindings: Bindings }>().route('/account', account).route('/auth', auth).route('/topic', topic)
 
-app.all('*', c => c.redirect(c.env.SITE_URL))
-
+app.all('*', c => {
+    console.log(c.event.request)
+    return c.redirect(c.env.SITE_URL)
+})
 
 showRoutes(app)
 

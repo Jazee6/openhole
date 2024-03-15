@@ -39,12 +39,7 @@ import {useDebounce} from "react-use";
 export function LoginModal() {
     const loginModal = useGlobalStore((state) => state.loginModal)
     const setLoginModal = useGlobalStore((state) => state.setLoginModal)
-    const setIsLogin = useGlobalStore((state) => state.setIsLogin)
 
-    const formProps = {
-        setLoginModal,
-        setIsLogin
-    }
     return (
         <Dialog open={loginModal} onOpenChange={() => setLoginModal(false)}>
             <DialogContent>
@@ -56,8 +51,8 @@ export function LoginModal() {
                         <TabsTrigger value="login" className="w-full">登录</TabsTrigger>
                         <TabsTrigger value="register" className="w-full">注册</TabsTrigger>
                     </TabsList>
-                    <TabsContent value="login"><LoginForm {...formProps}/></TabsContent>
-                    <TabsContent value="register"><RegisterForm {...formProps}/></TabsContent>
+                    <TabsContent value="login"><LoginForm setLoginModal={setLoginModal}/></TabsContent>
+                    <TabsContent value="register"><RegisterForm setLoginModal={setLoginModal}/></TabsContent>
                 </Tabs>
             </DialogContent>
         </Dialog>
@@ -66,11 +61,11 @@ export function LoginModal() {
 
 interface FormProps {
     setLoginModal: (value: boolean) => void,
-    setIsLogin: (value: boolean) => void
 }
 
-function LoginForm({setLoginModal, setIsLogin}: FormProps) {
+function LoginForm({setLoginModal}: FormProps) {
     const [buttonDisabled, setButtonDisabled] = useState(false)
+    const setReload = useGlobalStore((state) => state.setReload)
 
     const form = useForm<z.infer<typeof loginSchema>>({
         resolver: zodResolver(loginSchema),
@@ -83,9 +78,9 @@ function LoginForm({setLoginModal, setIsLogin}: FormProps) {
     function onSubmit(values: z.infer<typeof loginSchema>) {
         setButtonDisabled(true)
 
-        loginReq(values).then(() => {
+        loginReq(values).then(async () => {
             setLoginModal(false)
-            setIsLogin(true)
+            setReload()
         }).finally(() => {
             setButtonDisabled(false)
         })
@@ -141,10 +136,11 @@ interface Tag {
     name: string,
 }
 
-function RegisterForm({setLoginModal, setIsLogin}: FormProps) {
+function RegisterForm({setLoginModal}: FormProps) {
     const [buttonDisabled, setButtonDisabled] = useState(false)
     const [tags, setTags] = useState<Tag[]>([])
     const [tagKey, setTagKey] = useState("")
+    const setReload = useGlobalStore((state) => state.setReload)
 
     const form = useForm<z.infer<typeof registerSchema>>({
         resolver: zodResolver(registerSchema),
@@ -164,9 +160,9 @@ function RegisterForm({setLoginModal, setIsLogin}: FormProps) {
     function onSubmit(values: z.infer<typeof registerSchema>) {
         setButtonDisabled(true)
 
-        registerReq(values).then(() => {
+        registerReq(values).then(async () => {
             setLoginModal(false)
-            setIsLogin(true)
+            setReload()
         }).finally(() => {
             setButtonDisabled(false)
         })

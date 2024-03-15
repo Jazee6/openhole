@@ -2,7 +2,7 @@ import {CommentData, TopicCardType, WithClassName} from "../utils/types.ts";
 import clsx from "clsx";
 import dayjs from "dayjs";
 import {IButton, StarFillIcon, StarIcon, VerifiedIcon} from "./icons.tsx";
-import {createTopicReq, starReq, unStarReq} from "@/api";
+import {createComment, createTopicReq, starReq, unStarReq} from "@/api";
 import {useGlobalStore, useTopicListStore} from "@/store";
 import {
     Drawer,
@@ -16,7 +16,7 @@ import {Button} from "@/components/ui/button.tsx";
 import {useState} from "react";
 import {useForm} from "react-hook-form";
 import {z} from "zod";
-import {createTopicSchema} from "@/server/utils/validator.ts";
+import {createCommentSchema, createTopicSchema} from "@/server/utils/validator.ts";
 import {zodResolver} from "@hookform/resolvers/zod";
 import {Form, FormControl, FormField, FormItem, FormMessage} from "@/components/ui/form.tsx";
 import {Loader2} from "lucide-react";
@@ -186,11 +186,17 @@ export interface CommentCardProps extends WithClassName, CommentData {
 
 }
 
+function getAnonymousName(uid: number) {
+    return uid !== 0 ? getAnonymousSub(uid - 1) : "洞主"
+}
+
 function CommentCard({
                          replies,
                          className,
                          ...reply
                      }: CommentCardProps) {
+    const setCommentDrawer = useGlobalStore((state) => state.setCommentDrawer)
+    const setCommentDrawerData = useGlobalStore((state) => state.setCommentDrawerData)
 
     return (
         <div className={clsx(className, "flex flex-col p-2 rounded-md space-y-1 bg-card")}>
@@ -201,10 +207,13 @@ function CommentCard({
                 <span className="text-secondary-foreground text-xs ml-1">{dayjs.tz(reply.created_at).fromNow()}</span>
                 <span className="text-primary text-xs ml-auto">R#{reply.id}</span>
             </div>
-            <div
-                className="flex items-center hover:bg-secondary hover:cursor-pointer rounded-md transition-all">
-                <span>{reply.uid !== 0 ? getAnonymousSub(reply.uid - 1) : "洞主"}</span>
-                <span className="ml-4 line-clamp-5">{reply.content}</span>
+            <div onClick={() => {
+                setCommentDrawer(true)
+                setCommentDrawerData({rootID: reply.id, toUID: reply.uid})
+            }}
+                 className="flex items-center hover:bg-secondary hover:cursor-pointer rounded-md transition-all">
+                <span className="w-12 shrink-0">{getAnonymousName(reply.uid)}</span>
+                <span className="line-clamp-5">{reply.content}</span>
             </div>
             {replies.length > 0 && <SubCommentCard replies={replies}/>}
         </div>
@@ -213,20 +222,25 @@ function CommentCard({
 
 function SubCommentCard({replies}: { replies: CommentData[] }) {
 
-    return <div className="ml-4">
+    return <div className="ml-12">
         {replies.map(reply => <SubCommentItem key={reply.id} {...reply} />)}
     </div>
 }
 
 function SubCommentItem(subReply: CommentData) {
+    const setCommentDrawer = useGlobalStore((state) => state.setCommentDrawer)
+    const setCommentDrawerData = useGlobalStore((state) => state.setCommentDrawerData)
 
     return (
-        <div
-            className="flex items-center text-sm rounded-md hover:bg-secondary hover:cursor-pointer transition-all">
-            <span>{subReply.uid !== 0 ? getAnonymousSub(subReply.uid - 1) : "洞主"}</span>
+        <div onClick={() => {
+            setCommentDrawer(true)
+            setCommentDrawerData({rootID: subReply.root_id, toID: subReply.id, toUID: subReply.uid})
+        }}
+             className="flex items-center text-sm rounded-md hover:bg-secondary hover:cursor-pointer transition-all">
+            <span>{getAnonymousName(subReply.uid)}</span>
             <span
-                className="shrink-0">{subReply.to_uid !== null ? '回复' + getAnonymousSub(subReply.to_uid! - 1) : ""}</span>
-            <span className="ml-4 line-clamp-2">{subReply.content}</span>
+                className="shrink-0">{subReply.to_uid !== null ? '回复' + getAnonymousName(subReply.to_uid!) : ""}</span>
+            <span className="ml-2 line-clamp-2">{subReply.content}</span>
         </div>
     );
 }
@@ -241,4 +255,112 @@ export function CommentList({CommentList, className}: { CommentList: CommentData
             ))}
         </ol>
     );
+}
+
+export interface CommentDrawerProps {
+    CommentDrawer: boolean,
+    setCommentDrawer: (b: boolean) => void,
+    topicID: number,
+    rootID?: number,
+    toID?: number,
+    toUID?: number
+}
+
+export function CreateCommentDrawer({
+                                        CommentDrawer,
+                                        setCommentDrawer,
+                                        topicID,
+                                        rootID,
+                                        toID,
+                                        toUID
+                                    }: CommentDrawerProps) {
+    const formProps: CommentFormProps = {
+        setCommentDrawer,
+        topicID,
+        rootID,
+        toID,
+        toUID
+    }
+
+    return (
+        <Drawer open={CommentDrawer} onOpenChange={setCommentDrawer}>
+            <DrawerContent className="h-1/2 container-global">
+                <DrawerHeader>
+                    <DrawerTitle>发表评论</DrawerTitle>
+                    <DrawerDescription>匿名</DrawerDescription>
+                </DrawerHeader>
+
+                <CreateCommentForm {...formProps}/>
+            </DrawerContent>
+        </Drawer>
+    )
+}
+
+interface CommentFormProps {
+    setCommentDrawer: (b: boolean) => void,
+    topicID: number,
+    rootID?: number,
+    toID?: number,
+    toUID?: number
+}
+
+
+function CreateCommentForm({setCommentDrawer, topicID, rootID, toID, toUID}: CommentFormProps) {
+    const setReload = useGlobalStore((state) => state.setReload)
+    const [buttonDisabled, setButtonDisabled] = useState(false)
+
+    const form = useForm<z.infer<typeof createCommentSchema>>({
+        resolver: zodResolver(createCommentSchema),
+        defaultValues: {
+            content: "",
+            topic_id: topicID,
+            root_id: rootID,
+            to_id: toID,
+        }
+    })
+
+    function onSubmit(values: z.infer<typeof createCommentSchema>) {
+        console.log(values)
+        setButtonDisabled(true)
+
+        createComment(values).then(() => {
+            setCommentDrawer(false)
+            setReload()
+        }).finally(() => {
+            setButtonDisabled(false)
+        })
+    }
+
+    function placeholder() {
+        if (toUID !== undefined) return `回复${getAnonymousName(toUID)}`
+        return "说点什么..."
+    }
+
+    return (
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-2">
+                <FormField
+                    control={form.control}
+                    name="content"
+                    render={({field}) => (
+                        <FormItem className="px-4 h-full">
+                            <FormControl>
+                                <Textarea className="h-full" placeholder={placeholder()} {...field}/>
+                            </FormControl>
+                            <FormMessage/>
+                        </FormItem>
+                    )}
+                />
+                <DrawerFooter>
+                    <div className="flex justify-end space-x-2">
+                        <Button disabled={buttonDisabled} type="submit">
+                            <Loader2 className={cn("mr-2 h-4 w-4 animate-spin", buttonDisabled ? "block" : "hidden")}/>
+                            发布
+                        </Button>
+                        <Button type="button" variant="secondary" onClick={() => setCommentDrawer(false)}>取消</Button>
+                    </div>
+                </DrawerFooter>
+            </form>
+        </Form>
+    )
 }

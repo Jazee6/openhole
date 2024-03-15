@@ -39,19 +39,30 @@ export const useTopicListStore = create<TopicListState>((set) => ({
 }))
 
 interface GlobalState {
-    isLogin: boolean;
-    setIsLogin: (isLogin: boolean) => void;
     loginModal: boolean;
     setLoginModal: (loginModal: boolean) => void;
     reload: boolean;
     setReload: () => void;
+    commentDrawer: boolean;
+    commentDrawerData: {
+        rootID?: number;
+        toID?: number;
+    }
+    setCommentDrawer: (commentDrawer: boolean) => void;
+    setCommentDrawerData: (commentDrawerData: {
+        rootID?: number;
+        toID?: number;
+        toUID?: number;
+    }) => void;
 }
 
 export const useGlobalStore = create<GlobalState>((set) => ({
-    isLogin: isLogin(),
-    setIsLogin: (isLogin) => set({isLogin}),
     loginModal: false,
     setLoginModal: (loginModal) => set({loginModal}),
     reload: false,
     setReload: () => set(state => ({reload: !state.reload})),
+    commentDrawer: false,
+    commentDrawerData: {},
+    setCommentDrawer: (commentDrawer) => set({commentDrawer}),
+    setCommentDrawerData: (commentDrawerData) => set({commentDrawerData}),
 }))

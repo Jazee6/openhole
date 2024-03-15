@@ -70,12 +70,13 @@ export function getComments({topic_id, limit, offset}: z.infer<typeof getComment
 }
 
 export function createComment({topic_id, root_id, to_id, content}: z.infer<typeof createCommentSchema>) {
-    return postFetchWithRecaptcha('/auth/comment', new URLSearchParams({
+    const data = {
         topic_id: topic_id.toString(),
-        root_id: root_id?.toString() ?? "",
-        to_id: to_id?.toString() ?? "",
         content,
-    }))
+    }
+    if (root_id) Object.assign(data, {root_id: root_id.toString()})
+    if (to_id) Object.assign(data, {to_id: to_id.toString()})
+    return postFetchWithRecaptcha('/auth/comment', new URLSearchParams(data))
 }
 
 export function getTopic({id}: z.infer<typeof getTopicSchema>) {

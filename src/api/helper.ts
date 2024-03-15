@@ -1,5 +1,6 @@
-import {getToken, isLogin, setToken} from "@/utils/tools.ts";
+import {clearToken, getToken, isLogin, setToken} from "@/utils/tools.ts";
 import toast from "react-hot-toast";
+import {useGlobalStore} from "@/store";
 
 interface JsonRes {
     message?: string
@@ -31,16 +32,20 @@ async function basicFetch(
         }
         return res;
     } else {
+        const errMsg = await response.text()
         if (response.status === 401) {
-            // const setLoginModal = useGlobalStore.getState().setLoginModal
-            // setLoginModal(true)
+            clearToken()
+            useGlobalStore.getState().setLoginModal(true)
+            if (errMsg.includes('JwtTokenExpired')) {
+                toast.error("登录已过期，请重新登录")
+                throw new Error("Login expired, please login again")
+            }
             toast.error("请先登录")
             throw new Error("Please login first")
         }
 
         const contentType = response.headers.get("Content-Type")
         if (contentType && contentType.includes("text/plain")) {
-            const errMsg = await response.text()
             toast.error(errMsg)
             throw new Error(errMsg)
         }

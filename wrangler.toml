@@ -1,18 +1,17 @@
 name = "openhole"
 compatibility_date = "2023-12-01"
 
-[vars]
+d1_databases = [
+    { binding = "D1", database_name = "openhole-dev", database_id = "7a7ecb87-3cc8-49e3-9527-c00fbea681a0" },
+    { binding = "D1", database_name = "openhole-prod", database_id = "7180584a-f33c-4d71-9caa-2cbe4a4434a7" }
+]
+
+[env.dev]
+
+[[vars]]
 SITE_URL = "http://localhost:5173"
 
-# [[kv_namespaces]]
-# binding = "MY_KV_NAMESPACE"
-# id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+[env.prod]
 
-# [[r2_buckets]]
-# binding = "MY_BUCKET"
-# bucket_name = "my-bucket"
-
-[[d1_databases]]
-binding = "D1"
-database_name = "openhole-dev"
-database_id = "7a7ecb87-3cc8-49e3-9527-c00fbea681a0"
+[[vars]]
+SITE_URL = "https://web.openhole.top"

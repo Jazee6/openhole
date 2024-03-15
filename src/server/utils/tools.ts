@@ -19,23 +19,26 @@ export type Bindings = {
 
 export interface Payload {
     id: string
-    // TODO exp
+    iat: number
+    exp: number
 }
 
-export function createHonoWithCors() {
-    return new Hono<{ Bindings: Bindings }>().use((c, next) => {
-        const corsMiddleware = cors({
-            origin: c.env.SITE_URL,
-            exposeHeaders: ['Authorization']
+export function createHono() {
+    return new Hono<{ Bindings: Bindings }>()
+        .use(ipMiddleware)
+        .use((c, next) => {
+            const corsMiddleware = cors({
+                origin: c.env.SITE_URL,
+                exposeHeaders: ['Authorization']
+            })
+            return corsMiddleware(c, next)
         })
-        return corsMiddleware(c, next)
-    })
-        // .use((c, next) => {
-        //     const csrfMiddleware = csrf({
-        //         origin: c.env.SITE_URL,
-        //     })
-        //     return csrfMiddleware(c, next)
-        // }).use(secureHeaders())
+        .use((c, next) => {
+            const csrfMiddleware = csrf({
+                origin: c.env.SITE_URL,
+            })
+            return csrfMiddleware(c, next)
+        }).use(secureHeaders())
 }
 
 export async function getPayload(token: string, secret: string) {
@@ -69,6 +72,14 @@ export const recaptchaMiddleware = createMiddleware<{ Bindings: Bindings }>(asyn
     const res = await verifyRecaptcha(token, c.env.RECAPTCHA) as RecaptchaRes
     if (!res.success) {
         return c.text('Recaptcha failed', 403)
+    }
+    await next()
+})
+
+export const ipMiddleware = createMiddleware(async (c, next) => {
+    const ipCountry = c.event.request.headers.get('cf-ipcountry')
+    if (ipCountry && ipCountry === 'CN') {
+        return c.text('Access denied', 403)
     }
     await next()
 })

@@ -7,10 +7,9 @@ import {Button} from "@/components/ui/button.tsx";
 import {TopicCardType} from "@/utils/types.ts";
 import {LoadMore} from "@/components/others.tsx";
 import {Skeleton} from "@/components/ui/skeleton.tsx";
-import {randomNum} from "@/utils/tools.ts";
+import {isLogin, randomNum} from "@/utils/tools.ts";
 
 function Index() {
-    const isLogin = useGlobalStore((state) => state.isLogin)
     const topicList = useTopicListStore((state) => state.topicList)
     const setTopicList = useTopicListStore((state) => state.setTopicList)
     const reload = useGlobalStore((state) => state.reload)
@@ -22,7 +21,7 @@ function Index() {
             setTopicList(res.data as TopicCardType[])
             setInit(true)
         })
-    }, [setTopicList, isLogin, reload]);
+    }, [setTopicList, reload]);
 
     useEffect(() => {
         if (init) {
@@ -65,7 +64,7 @@ function Index() {
 
             <LoadMore/>
 
-            {isLogin &&
+            {isLogin() &&
                 <div className="flex justify-end sticky bottom-4 right-4 sm:right-6 lg:right-8 mt-auto">
                     <Button onClick={handleNewPost}
                             className="bg-primary hover:opacity-70 rounded-full h-16 w-16 transition-all shadow-xl">
