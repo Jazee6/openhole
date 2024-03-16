@@ -81,6 +81,5 @@ export const ipMiddleware = createMiddleware(async (c, next) => {
     if (ipCountry && ipCountry === 'CN') {
         return c.text('Access denied', 403)
     }
-    return c.text('Access denied', 403)
     await next()
 })
