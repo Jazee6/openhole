@@ -11,6 +11,11 @@ jobs:
     name: Deploy
     steps:
       - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 8
+
       - name: Deploy
         uses: cloudflare/wrangler-action@v3
         with:
