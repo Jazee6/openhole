@@ -1,6 +1,7 @@
 import {clearToken, getToken, isLogin, setToken} from "@/utils/tools.ts";
 import toast from "react-hot-toast";
 import {useGlobalStore} from "@/store";
+import {router} from "@/routes.tsx";
 
 interface JsonRes {
     message?: string
@@ -33,6 +34,11 @@ async function basicFetch(
         return res;
     } else {
         const errMsg = await response.text()
+        if (response.status === 403) {
+            await router.navigate('/deny')
+            throw new Error("Access denied")
+        }
+
         if (response.status === 401) {
             clearToken()
             useGlobalStore.getState().setLoginModal(true)

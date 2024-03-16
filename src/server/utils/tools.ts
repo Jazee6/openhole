@@ -25,7 +25,6 @@ export interface Payload {
 
 export function createHono() {
     return new Hono<{ Bindings: Bindings }>()
-        .use(ipMiddleware)
         .use((c, next) => {
             const corsMiddleware = cors({
                 origin: c.env.SITE_URL,
@@ -33,6 +32,7 @@ export function createHono() {
             })
             return corsMiddleware(c, next)
         })
+        .use(ipMiddleware)
         .use((c, next) => {
             const csrfMiddleware = csrf({
                 origin: c.env.SITE_URL,
@@ -77,9 +77,10 @@ export const recaptchaMiddleware = createMiddleware<{ Bindings: Bindings }>(asyn
 })
 
 export const ipMiddleware = createMiddleware(async (c, next) => {
-    const ipCountry = c.event.request.headers.get('cf-ipcountry')
+    const ipCountry = c.req.raw.headers.get('cf-ipcountry')
     if (ipCountry && ipCountry === 'CN') {
         return c.text('Access denied', 403)
     }
+    return c.text('Access denied', 403)
     await next()
 })

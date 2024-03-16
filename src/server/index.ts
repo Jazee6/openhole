@@ -280,10 +280,7 @@ topic.get('/:id', zValidator('param', getTopicSchema), async c => {
 
 const app = new Hono<{ Bindings: Bindings }>().route('/account', account).route('/auth', auth).route('/topic', topic)
 
-app.all('*', c => {
-    console.log(c.event.request)
-    return c.redirect(c.env.SITE_URL)
-})
+app.all('*', c => c.redirect(c.env.SITE_URL))
 
 showRoutes(app)
 
