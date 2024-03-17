@@ -40,10 +40,14 @@
 
 #### Cloudflare Workers
 
-[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/Jazee6/openhole)
-
-- 点击按钮后使用Github登录
-- 根据提示输入Account ID和Workers API Token
+- `Fork` and `git clone`
+- `npm i`安装依赖
+- 创建数据库`wrangler d1 create openhole-xxx`
+- 将数据库信息填入`wrangler.toml`中的`[env.prod]`
+- 执行初始化数据库`wrangler d1 execute openhole-xxx --remote --file=./init/create.sql`
+- 导入标签数据`wrangler d1 execute openhole-xxx --remote --file=./init/tags.sql`
+- `npm run deploy`
+- 在web页面中添加环境变量
 
 ## 声明
 
