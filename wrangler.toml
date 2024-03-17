@@ -1,6 +1,9 @@
 name = "openhole"
 compatibility_date = "2023-12-01"
 
+[placement]
+mode = "smart"
+
 [env.dev]
 d1_databases = [
     { binding = "D1", database_name = "openhole-dev", database_id = "7a7ecb87-3cc8-49e3-9527-c00fbea681a0" }
@@ -15,4 +18,3 @@ d1_databases = [
 ]
 
 vars = { SITE_URL = "https://web.openhole.top" }
-

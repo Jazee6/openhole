@@ -13,7 +13,7 @@ import {
     DrawerTitle,
 } from "@/components/ui/drawer"
 import {Button} from "@/components/ui/button.tsx";
-import {useState} from "react";
+import {useCallback, useState} from "react";
 import {useForm} from "react-hook-form";
 import {z} from "zod";
 import {createCommentSchema, createTopicSchema} from "@/server/utils/validator.ts";
@@ -331,10 +331,10 @@ function CreateCommentForm({setCommentDrawer, topicID, rootID, toID, toUID}: Com
         })
     }
 
-    function placeholder() {
+    const placeholder = useCallback(() => {
         if (toUID !== undefined) return `回复${getAnonymousName(toUID)}`
         return "说点什么..."
-    }
+    }, [toUID])
 
     return (
         <Form {...form}>
