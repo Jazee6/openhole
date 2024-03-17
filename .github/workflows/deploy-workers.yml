@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-        description: "Choose an environment to deploy to: <dev|staging|prod>"
+        description: "Choose an environment to deploy to: <dev|prod>"
         required: true
-        default: "dev"
+        default: "prod"
 
 jobs:
   deploy:
@@ -29,4 +29,4 @@ jobs:
           packageManager: pnpm
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy --minify src/server/index.ts -e prod
+          command: deploy --minify src/server/index.ts -e ${{ github.event.inputs.environment }}
